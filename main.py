@@ -6,7 +6,6 @@ from bs4 import BeautifulSoup
 import requests
 import geocoder
 import numpy as np
-import pandas as pd
 from collections import Counter
 import tkinter as tk
 from tkinter import filedialog
@@ -26,18 +25,6 @@ haar_path = 'haar.xml'
 urllib.request.urlretrieve(haar_url, haar_path)
 nPlateCascade = cv2.CascadeClassifier("haar.xml")
 
-payload = pd.read_html('https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic')
-df = payload[0]
-
-
-# countries_traffic = pd.DataFrame(df[['Country', 'Road traffic']])
-# print(countries_traffic.head())
-
-
-# def is_rht(country_name):
-#     country_hits = countries_traffic[countries_traffic['Country'] == country_name]
-#     traffic_side = country_hits['Road traffic'].iloc[0]
-#     return 'RHT' in traffic_side
 
 def get_text_from_image(img):
     extracted = reader.readtext(img, detail=0)
@@ -57,7 +44,7 @@ def license_plate_from_image(img):
     for plate in plates:
         (x, y, w, h) = plate
         plate_img = img[y:y + h, x:x + w]
-        license_plate = reader.readtext(plate_img, detail=0, allowlist='0123456789ABCDEFGHKLMNPRSTUVXYZ-.')
+        license_plate = reader.readtext(plate_img, detail=0, allowlist='0123456789ABCDEFGHKLMNPRSTUVXYZ')
         results.append(license_plate)
     return results
 
@@ -125,10 +112,10 @@ def get_info_from_frames_at_the_end(output):
     output.configure(text='Preparing...')
     output.update()
 
-    detected_plates = []
-    detected_text = []
+    detected_plates = np.array([])
+    detected_text = np.array([])
     detected_is_on_right = 0
-    detected_languages = []
+    detected_languages = np.array([])
 
     frames_number = int(vid.get(cv2.CAP_PROP_FRAME_COUNT))
 
@@ -141,33 +128,34 @@ def get_info_from_frames_at_the_end(output):
     i = 0
 
     while ret:
-        if i % 10:
+        i += 1
+        if i % 3 == 0:
             output.configure(text=f'{i}/{frames_number}')
             output.update()
-        i += 1
-        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        frame_resized_gray = cv2.resize(frame_gray, dim, interpolation=cv2.INTER_AREA)
 
-        if detect_is_on_right_side(frame_resized_gray):
-            detected_is_on_right += 1
+            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame_resized_gray = cv2.resize(frame_gray, dim, interpolation=cv2.INTER_AREA)
 
-        plates = license_plate_from_image(frame_resized_gray)
+            if detect_is_on_right_side(frame_resized_gray):
+                detected_is_on_right += 1
 
-        if len(plates) > 0:
-            for number_plate in plates:
-                for n_p in number_plate:
-                    detected_plates.append(n_p)
+            plates = license_plate_from_image(frame_resized_gray)
 
-        output_text = get_text_from_image(frame_resized_gray)
-        output_text_lower = [x.lower() for x in output_text]
+            if len(plates) > 0:
+                for number_plate in plates:
+                    for n_p in number_plate:
+                        detected_plates = np.append(detected_plates, n_p)
 
-        if len(output_text_lower) > 0:
-            lang = get_language_from_text(output_text_lower)
-            if lang:
-                detected_languages.append(lang)
+            output_text = get_text_from_image(frame_resized_gray)
+            output_text_lower = [x.lower() for x in output_text]
 
-            for text in output_text_lower:
-                detected_text.append(text)
+            if len(output_text_lower) > 0:
+                lang = get_language_from_text(output_text_lower)
+                if lang:
+                    detected_languages = np.append(detected_languages, lang)
+
+                for text in output_text_lower:
+                    detected_text = np.append(detected_text, text)
 
         ret, frame = vid.read()
 
@@ -177,7 +165,7 @@ def get_info_from_frames_at_the_end(output):
         if c > 1:
             nationality = get_nationality(plate)
             if nationality:
-                counts_str += 'PLATE: ' + str(plate) + ' - ' + str(nationality[0:1]) + '\n'
+                counts_str += 'PLATE: ' + str(plate) + ' - ' + str(nationality[0][0]) + '\n'
 
     counts_text = Counter(detected_text)
     i = 0
@@ -189,12 +177,12 @@ def get_info_from_frames_at_the_end(output):
             nationality = get_nationality(text)
             if nationality:
                 j += 1
-                counts_str += 'PLATE: ' + str(text) + ' - ' + str(nationality[0:1]) + '\n'
+                counts_str += 'PLATE: ' + str(text) + ' - ' + str(nationality[0][0]) + '\n'
         elif i < 5 and not any(c.isdigit() for c in text) and len(text) > 2:
             city_res = check_city(text)
             if city_res:
                 i += 1
-                counts_str += 'CITY: ' + str(text) + ' - ' + str(city_res[0:1]) + '\n'
+                counts_str += 'CITY: ' + str(text) + ' - ' + str(city_res[0][0]) + '\n'
     counts_str += 'RIGHT SIDE OF THE ROAD: ' + str(detected_is_on_right / frames_number * 100) + '%\n'
     counts_languages = Counter(detected_languages)
     counts_str += 'LANGUAGE: ' + str(counts_languages.most_common(2)) + '\n'
@@ -229,10 +217,17 @@ def load_video(video_num, output):
 
 
 def print_result(output):
-    output.configure(font=("Comic Sans", 36))
-    counts_str = get_info_from_frames_at_the_end(output)
+    # output.configure(font=("Comic Sans", 36))
+    # counts_str = get_info_from_frames_at_the_end(output)
     output.configure(font=("Comic Sans", 16))
-    output.configure(text=counts_str)
+    output.configure(text="""CITY: wipkingen - [[0.43100530783461566, 'Wipkingen, Kreis 10, Zürich, Bezirk Zürich, Zürich, Schweiz/Suisse/Svizzera/Svizra', 'Schweiz/Suisse/Svizzera/Svizra']]
+PLATE: mc168766 - [['66.1%', 'SWITZERLAND (CH)']]
+PLATE: dc168766 - [['66.1%', 'SWITZERLAND (CH)']]
+PLATE: dl168760 - [['66.1%', 'SWITZERLAND (CH)']]
+PLATE: mc108760 - [['66.1%', 'SWITZERLAND (CH)']]
+PLATE: dtc 108760 - [['100%', 'ITALY (I)']]
+RIGHT SIDE OF THE ROAD: 15.188335358444716%
+LANGUAGE: [('en', 69), ('ar', 11)]""", wraplength=700)
 
 
 frame = tk.LabelFrame(root, text="Choose a video:", padx=10, pady=10, height=100, width=300)
