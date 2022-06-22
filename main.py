@@ -73,9 +73,9 @@ def check_city(city, min_accuracy=0.2):
         r = result.json
         if r['accuracy'] > min_accuracy:
             if 'country' in r.keys():
-                output.append([r['accuracy'], r['address'], r['country']])
+                output.append([f"{round(r['accuracy'] * 100, 2)}%", r['address'], r['country']])
             else:
-                output.append([r['accuracy'], r['address']])
+                output.append([f"{round(r['accuracy'] * 100, 2)}%", r['address']])
     return output
 
 
@@ -171,19 +171,19 @@ def get_info_from_frames_at_the_end(output):
     i = 0
     j = 0
     for text, _ in counts_text.most_common():
-        if j == 5 or i == 5:
+        if j == 3 or i == 3:
             break
-        if j < 5 and any(c.isdigit() for c in text) and len(text) > 4:
+        if j < 3 and any(c.isdigit() for c in text) and len(text) > 4:
             nationality = get_nationality(text)
             if nationality:
                 j += 1
                 counts_str += 'PLATE: ' + str(text) + ' - ' + str(nationality[0][0]) + '\n'
-        elif i < 5 and not any(c.isdigit() for c in text) and len(text) > 2:
+        elif i < 3 and not any(c.isdigit() for c in text) and len(text) > 2:
             city_res = check_city(text)
             if city_res:
                 i += 1
                 counts_str += 'CITY: ' + str(text) + ' - ' + str(city_res[0][0]) + '\n'
-    counts_str += 'RIGHT SIDE OF THE ROAD: ' + str(detected_is_on_right / frames_number * 100) + '%\n'
+    counts_str += 'RIGHT SIDE OF THE ROAD: ' + str(round(detected_is_on_right / frames_number * 100, 2)) + '%\n'
     counts_languages = Counter(detected_languages)
     counts_str += 'LANGUAGE: ' + str(counts_languages.most_common(2)) + '\n'
     return counts_str
