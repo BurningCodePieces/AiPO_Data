@@ -20,9 +20,6 @@ vid = None
 reader = easyocr.Reader(['en'])
 translator = Translator()
 
-haar_url = 'https://raw.githubusercontent.com/BurningCodePieces/AiPO_Data/main/haar.xml'
-haar_path = 'haar.xml'
-urllib.request.urlretrieve(haar_url, haar_path)
 nPlateCascade = cv2.CascadeClassifier("haar.xml")
 
 
