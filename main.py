@@ -195,18 +195,13 @@ def load_video(video_num, output):
     output.update()
     if video_num:
         if video_num == 1:
-            video_url = 'https://github.com/BurningCodePieces/AiPO_Data/raw/main/video1.mp4'
             vid_path = 'video1.mp4'
         elif video_num == 2:
-            video_url = 'https://github.com/BurningCodePieces/AiPO_Data/raw/main/video2.mp4'
             vid_path = 'video2.mp4'
         elif video_num == 3:
-            video_url = 'https://github.com/BurningCodePieces/AiPO_Data/raw/main/video3.mp4'
             vid_path = 'video3.mp4'
         else:
-            video_url = 'https://download.ifi.uzh.ch/rpg/web/data/E2VID/datasets/driving_gen3/external_videos/back8.mp4'
             vid_path = 'video4.mp4'
-        urllib.request.urlretrieve(video_url, vid_path)
     else:
         vid_path = filedialog.askopenfilename(initialdir="/",
                                               title="Select a video",
