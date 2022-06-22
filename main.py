@@ -163,7 +163,8 @@ def get_info_from_frames_at_the_end(output):
 
         if len(output_text_lower) > 0:
             lang = get_language_from_text(output_text_lower)
-            detected_languages.append(lang)
+            if lang:
+                detected_languages.append(lang)
 
             for text in output_text_lower:
                 detected_text.append(text)
