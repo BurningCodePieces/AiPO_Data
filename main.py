@@ -217,17 +217,10 @@ def load_video(video_num, output):
 
 
 def print_result(output):
-    # output.configure(font=("Comic Sans", 36))
-    # counts_str = get_info_from_frames_at_the_end(output)
+    output.configure(font=("Comic Sans", 36))
+    counts_str = get_info_from_frames_at_the_end(output)
     output.configure(font=("Comic Sans", 16))
-    output.configure(text="""CITY: wipkingen - [[0.43100530783461566, 'Wipkingen, Kreis 10, Zürich, Bezirk Zürich, Zürich, Schweiz/Suisse/Svizzera/Svizra', 'Schweiz/Suisse/Svizzera/Svizra']]
-PLATE: mc168766 - [['66.1%', 'SWITZERLAND (CH)']]
-PLATE: dc168766 - [['66.1%', 'SWITZERLAND (CH)']]
-PLATE: dl168760 - [['66.1%', 'SWITZERLAND (CH)']]
-PLATE: mc108760 - [['66.1%', 'SWITZERLAND (CH)']]
-PLATE: dtc 108760 - [['100%', 'ITALY (I)']]
-RIGHT SIDE OF THE ROAD: 15.188335358444716%
-LANGUAGE: [('en', 69), ('ar', 11)]""", wraplength=700)
+    output.configure(text=counts_str, wraplength=700)
 
 
 frame = tk.LabelFrame(root, text="Choose a video:", padx=10, pady=10, height=100, width=300)
